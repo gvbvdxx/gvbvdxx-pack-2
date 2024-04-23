@@ -3,8 +3,15 @@ const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
 const http = require("http");
-var packageFunction = (p) => {
-	return require("./packager/").packager(fs.readFileSync(path.join("./",p),{encoding:"UTF-8"}),p);
+var packageFunction = (p,isCode,p2) => {
+	var data = p;
+	var p3 = p2;
+	if (!isCode) {
+		
+		data = fs.readFileSync(path.join("./",p),{encoding:"UTF-8"});
+		p3 = p;
+	}
+	return require("./packager/").packager(data,p3);
 };
 var {convertStringToFile} = require("./packager/");
 let filepathlist = [];
@@ -40,6 +47,24 @@ module.exports = {
 		ThroughDirectory(dir);
 		return filepathlist;
 	},
+	minify: function (content) {
+		var uglifyResult = UglifyJS.minify(content, {
+			toplevel: true,
+			warnings: true,
+			compress: {
+				passes: 10,
+				annotations: true,
+			},
+			output: {
+				beautify: false,
+				preamble: "/* This file has been minimized to save space and load times, I don't recommend editing this directly. */"
+			}
+		});
+		if (uglifyResult.error) {
+			throw new Error(uglifyResult.error);
+		}
+		return uglifyResult.code;
+	},
 	compile: function (files,logging,addonHTMLS,uglify) {
 		var compiled = [];
 		var logging = false;
@@ -63,27 +88,31 @@ module.exports = {
 				var filename = files[i];
 				var packageData = null;
 				if (uglify && (filename.split(".").pop() == "js" || filename.split(".").pop() == "JS")) {
-					var uglifyResult = UglifyJS.minify(packageFunction(files[i]), {
-						toplevel: false,
-						keep_fnames: true,
-						keep_fargs: true,
-						mangle: false,
+					var filecontent = fs.readFileSync(path.join("./",files[i]),{encoding:"UTF-8"});
+					var uglifyResult = UglifyJS.minify(filecontent, {
+						mangle: { 
+							reserved: ["window","require","gp_require","__gvbvdxx_pack_filedata","exports","name"],
+							//toplevel: false,
+						},
 						warnings: true,
 						compress: {
-							passes: 1
+							passes: 1,
+							unused: false,
+							expression: false,
 						},
 						output: {
-							beautify: false,
-							preamble: "/* This file has been minified, please do not edit if you see this message. */"
+							beautify: false
 						}
 					});
 					if (uglifyResult.error) {
 						console.log(chalk.bgRed(chalk.white(`Uglify Error: ${uglifyResult.error}`)));
 					}
-					for (var warning of uglifyResult.warnings) {
-						console.log(chalk.bgYellow(chalk.white(`Uglify Warning: ${warning}`)));
+					if (uglifyResult.warnings) {
+						for (var warning of uglifyResult.warnings) {
+							console.log(chalk.bgYellow(chalk.white(`Uglify Warning: ${warning}`)));
+						}
 					}
-					packageData = uglifyResult.code;
+					packageData = packageFunction(uglifyResult.code,true,files[i]);
 				} else {
 					packageData = packageFunction(files[i]);
 				}
@@ -109,7 +138,7 @@ module.exports = {
 				}
 			}catch(e){
 				if (!(logging)) {
-					console.log(chalk.bgRed(chalk.white(`Failed To Compile: ${path.join("./",files[i])}`)));
+					console.log(chalk.bgRed(chalk.white(`Failed To Compile: ${path.join("./",files[i])} ${e}`)));
 				}
 			}
 		}
@@ -118,6 +147,7 @@ module.exports = {
 	},
 	build: function (compiledobject,template,nolog,donecb) {
 		var nolog = false;
+		var thisobject = this;
 		fs.rm("./dist/", {recursive: true},function () {
 			var compiled = compiledobject.compiled;
 			var fileTemplate = {};
@@ -218,6 +248,7 @@ module.exports = {
 		for (var i in keys) {
 			fileTemplate[compiled[keys[i]].realdir] = compiled[keys[i]];
 		}
+		var thisobject = this;
 		var httpServer = http.createServer(function (req,res) {
 			if (compiledobject.addonHTMLS) {
 				for (var addonhtml of compiledobject.addonHTMLS) {
@@ -242,7 +273,7 @@ module.exports = {
 				return;
 			}
 			if (req.url == "/main.js?n=1" || req.url == "/main.js/?n=1") {
-				res.end(`var GPDATA = ${JSON.stringify({fileTemplate:fileTemplate,files:compiled},null," ")};`+require("./packager/").main.join("\n"));
+				res.end(`var GPDATA = ${JSON.stringify({fileTemplate:fileTemplate,files:compiled},null," ")};`+"\n"+require("./packager/").main.join("\n"));
 				return;
 			}	
 			if (req.url == "/gvbvdxxpack_files.json?n=1" || req.url == "/gvbvdxxpack_files.json/?n=1") {

@@ -1,5 +1,3 @@
-
-
 (function () {
     var dirname = "";
 	var __GP_elements = {};
@@ -15,7 +13,7 @@
             console.error("%c[" + a + "]:" + b, "color:#ff8787;font-weight:bold;background:#c92a2a;");
         }
     };
-    var gp_require = (a,filename) => {
+    var gp_require = ((a,filename) => {
 		if (!filename) {
 			throw new Error("Do NOT use gp_require, instead use require.");
 		}
@@ -23,10 +21,8 @@
 			throw new Error("Module must have a path to the file.");
 		}
         if (a == "log") {
-			//should display the modules filename now.
             return {
                 log: function (b) {
-					
                     console.log("%c[" + filename + "]:" + b, "color:black;font-weight:bold;");
                 },
                 warn: function (b) {
@@ -37,7 +33,7 @@
                 }
             };
         }
-		if (a == "globalvars") { //global variables across the current gvbvdxx pack program, but not available for the full window. (for better security)
+		if (a == "globalvars") { 
 			return {
 				setVar:function (name,val) {
 					__GP_global_vars[name] = val;
@@ -48,14 +44,14 @@
 				}
 			};
 		}
-		if (a == "elements") {//Quick alternative for document access.
+		if (a == "elements") {
 			return {
 				appendElements: function (elm,appendArray) {
 					for (var appendElm of appendArray) {
 						elm.append(appendElm);
 					}
 				},
-				createElementsFromJSON: function (jsonelmArray) { //converts an array of json's with element properties to a element list.
+				createElementsFromJSON: function (jsonelmArray) { 
 					function runElements(arry) {
 						var myRealElms = [];
 						for (var elm of arry) {
@@ -194,6 +190,8 @@
             if (var__gvbvdxx_pack_filedata[i].realdirNoReplacer.replaceAll("\\", "/") == a) {
 				try{
 					var module = eval(var__gvbvdxx_pack_filedata[i].data);
+					console.log(var__gvbvdxx_pack_filedata[i].data);
+					console.log(module);
 					if (module && module.filename) {
 						return module.exports;
 					} else {
@@ -208,7 +206,7 @@
             }
         }
         throw Error("Unable To Find Module " + a)
-    };
+    });
     var dirs = () => {
         var dirsgen = [];
         for (var i in var__gvbvdxx_pack_filedata) {
@@ -218,7 +216,6 @@
     };
     var var__gvbvdxx_pack_filedata = {};
     var__gvbvdxx_pack_filedata = GPDATA.fileTemplate;
-    //__gvbvdxx_pack_log.log("Gvbvdxx Pack", "Loaded Files");
 	try{
 		gp_require("src/index.js","src/index.js");
 	}catch(e){
