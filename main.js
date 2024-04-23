@@ -87,7 +87,8 @@ module.exports = {
 			try{
 				var filename = files[i];
 				var packageData = null;
-				if (uglify && (filename.split(".").pop() == "js" || filename.split(".").pop() == "JS")) {
+				//if (uglify && (filename.split(".").pop() == "js" || filename.split(".").pop() == "JS")) {
+				if (false) { //Sorry :/ no more minify, its too glitchy.
 					var filecontent = fs.readFileSync(path.join("./",files[i]),{encoding:"UTF-8"});
 					var uglifyResult = UglifyJS.minify(filecontent, {
 						mangle: { 
