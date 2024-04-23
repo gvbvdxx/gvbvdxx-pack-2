@@ -22,7 +22,12 @@ ThroughDirectory("./src/");
  * Disable Logging
  * @boolean
  **/
-var files = gvbvdxxPack.compile(filepathlist,false);
+var files = gvbvdxxPack.compile(filepathlist,false,[
+	{
+		contents: fs.readFileSync("src/template2.html",{encoding:"UTF-8"}),
+		name: "test.html"
+	}
+]);
 /**
  * Compiled Files
  * @array
