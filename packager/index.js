@@ -11,9 +11,9 @@ var mod = {
 		for (var i in code) {
 			genaratedCode.push(`${code[i].replaceAll("\t","    ")}`);
 		}
-		genaratedCode.push(`${"\n"}return module;`);
+		genaratedCode.push(`return module;`);
 		genaratedCode.push(`})();`);
-		return genaratedCode.join("");
+		return genaratedCode.join("\n");
 	},
 	main:main,
 	convertStringToFile: (string) => {

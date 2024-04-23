@@ -190,8 +190,6 @@
             if (var__gvbvdxx_pack_filedata[i].realdirNoReplacer.replaceAll("\\", "/") == a) {
 				try{
 					var module = eval(var__gvbvdxx_pack_filedata[i].data);
-					console.log(var__gvbvdxx_pack_filedata[i].data);
-					console.log(module);
 					if (module && module.filename) {
 						return module.exports;
 					} else {

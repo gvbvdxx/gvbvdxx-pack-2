@@ -26,7 +26,7 @@ function minify(content) {
 	}
 var contents = fs.readFileSync("./packager/main.js", {
     encoding: "UTF-8"
-}).replaceAll("\t","").replaceAll("\n","").replaceAll("\r","");
+});
 var extracted = contents.split("\n");
 var comments = fs.readFileSync("./packager/comments.js", {
     encoding: "UTF-8"
