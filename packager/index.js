@@ -4,14 +4,15 @@ var mod = {
 		var code = contents.split("\n");
 		var genaratedCode = [];
 		genaratedCode.push(`(function () {`);
-		genaratedCode.push(`var module = {exports:null,filename:${JSON.stringify(name)}};`);
-		genaratedCode.push(`var require = function (a) {return gp_require(a,${JSON.stringify(name)});};`);
-		genaratedCode.push(`var var__gvbvdxx_pack_filedata = null;`);
-		genaratedCode.push(`var cur_file = ${JSON.stringify(name)};`);
+		genaratedCode.push(`//ignore these variables, for the module stuff.`);
+		genaratedCode.push(`    var module = {exports:null,filename:JSON.stringify(name)};`);
+		genaratedCode.push(`    var require = function (a) {return gp_require(a,${JSON.stringify(name)});};`);
+		genaratedCode.push(`    var var__gvbvdxx_pack_filedata = null; //prevent overwrite`);
+		genaratedCode.push(`    var cur_file = ${JSON.stringify(name)};`);
 		for (var i in code) {
-			genaratedCode.push(`${code[i].replaceAll("\t","    ")}`);
+			genaratedCode.push(`    ${code[i].replaceAll("\t","    ")}`);
 		}
-		genaratedCode.push(`return module;`);
+		genaratedCode.push(`    return module;`);
 		genaratedCode.push(`})();`);
 		return genaratedCode.join("\n");
 	},

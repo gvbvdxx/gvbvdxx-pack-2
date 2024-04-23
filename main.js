@@ -1,17 +1,9 @@
-var UglifyJS = require("uglify-js");
 const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
 const http = require("http");
-var packageFunction = (p,isCode,p2) => {
-	var data = p;
-	var p3 = p2;
-	if (!isCode) {
-		
-		data = fs.readFileSync(path.join("./",p),{encoding:"UTF-8"});
-		p3 = p;
-	}
-	return require("./packager/").packager(data,p3);
+var packageFunction = (p) => {
+	return require("./packager/").packager(fs.readFileSync(path.join("./",p),{encoding:"UTF-8"}),p);
 };
 var {convertStringToFile} = require("./packager/");
 let filepathlist = [];
@@ -47,25 +39,7 @@ module.exports = {
 		ThroughDirectory(dir);
 		return filepathlist;
 	},
-	minify: function (content) {
-		var uglifyResult = UglifyJS.minify(content, {
-			toplevel: true,
-			warnings: true,
-			compress: {
-				passes: 10,
-				annotations: true,
-			},
-			output: {
-				beautify: false,
-				preamble: "/* This file has been minimized to save space and load times, I don't recommend editing this directly. */"
-			}
-		});
-		if (uglifyResult.error) {
-			throw new Error(uglifyResult.error);
-		}
-		return uglifyResult.code;
-	},
-	compile: function (files,logging,addonHTMLS,uglify) {
+	compile: function (files,logging) {
 		var compiled = [];
 		var logging = false;
 		var prevfiles = files;
@@ -77,8 +51,7 @@ module.exports = {
 			recompile:function () {
 				this.compiled = expo.compile(prevfiles,true).compiled;
 			},
-			files:files,
-			addonHTMLS: addonHTMLS
+			files:files
 		};
 		for (var i in files) {
 			if (logging) {
@@ -86,39 +59,8 @@ module.exports = {
 			}
 			try{
 				var filename = files[i];
-				var packageData = null;
-				//if (uglify && (filename.split(".").pop() == "js" || filename.split(".").pop() == "JS")) {
-				if (false) { //Sorry :/ no more minify, its too glitchy.
-					var filecontent = fs.readFileSync(path.join("./",files[i]),{encoding:"UTF-8"});
-					var uglifyResult = UglifyJS.minify(filecontent, {
-						mangle: { 
-							reserved: ["window","require","gp_require","__gvbvdxx_pack_filedata","exports","name"],
-							//toplevel: false,
-						},
-						warnings: true,
-						compress: {
-							passes: 1,
-							unused: false,
-							expression: false,
-						},
-						output: {
-							beautify: false
-						}
-					});
-					if (uglifyResult.error) {
-						console.log(chalk.bgRed(chalk.white(`Uglify Error: ${uglifyResult.error}`)));
-					}
-					if (uglifyResult.warnings) {
-						for (var warning of uglifyResult.warnings) {
-							console.log(chalk.bgYellow(chalk.white(`Uglify Warning: ${warning}`)));
-						}
-					}
-					packageData = packageFunction(uglifyResult.code,true,files[i]);
-				} else {
-					packageData = packageFunction(files[i]);
-				}
 				compiled.push({
-					data:packageData,
+					data:packageFunction(files[i]),
 					name:files[i],
 					dirname:convertStringToFile(path.join("./",files[i])),
 					realdir:convertStringToFile(path.join("./",files[i])),
@@ -139,7 +81,7 @@ module.exports = {
 				}
 			}catch(e){
 				if (!(logging)) {
-					console.log(chalk.bgRed(chalk.white(`Failed To Compile: ${path.join("./",files[i])} ${e}`)));
+					console.log(chalk.bgBlue(chalk.white(`Failed To Compile: ${path.join("./",files[i])}`)));
 				}
 			}
 		}
@@ -148,7 +90,6 @@ module.exports = {
 	},
 	build: function (compiledobject,template,nolog,donecb) {
 		var nolog = false;
-		var thisobject = this;
 		fs.rm("./dist/", {recursive: true},function () {
 			var compiled = compiledobject.compiled;
 			var fileTemplate = {};
@@ -180,13 +121,6 @@ module.exports = {
 			try{
 				fs.writeFileSync("./dist/index.html",staticHTML,{encoding:"UTF-8"});
 			}catch(e){}
-			if (compiledobject.addonHTMLS) {
-				for (var addonhtml of compiledobject.addonHTMLS) {
-					try{
-						fs.writeFileSync(path.join("./dist/",addonhtml.name),addonhtml.contents);
-					}catch(e){}
-				}
-			}
 			if (!(nolog)) {
 			console.log(chalk.bgBlue(chalk.white(`Building: ${"gvbvdxxpack_files.json"}`)));
 			}
@@ -249,22 +183,7 @@ module.exports = {
 		for (var i in keys) {
 			fileTemplate[compiled[keys[i]].realdir] = compiled[keys[i]];
 		}
-		var thisobject = this;
 		var httpServer = http.createServer(function (req,res) {
-			if (compiledobject.addonHTMLS) {
-				for (var addonhtml of compiledobject.addonHTMLS) {
-					try{
-						var urlName = "/"+decodeURIComponent(addonhtml.name);
-						var url = decodeURIComponent(req.url).split("?")[0].split("#")[0];
-						if (urlName == url) {
-							res.end(addonhtml.contents);
-							return;
-						}
-					}catch(e){
-						console.error(e);
-					}
-				}
-			}
 			if (req.url == "/" || req.url == "") {
 				if (template) {
 					res.end(template);
@@ -274,7 +193,7 @@ module.exports = {
 				return;
 			}
 			if (req.url == "/main.js?n=1" || req.url == "/main.js/?n=1") {
-				res.end(`var GPDATA = ${JSON.stringify({fileTemplate:fileTemplate,files:compiled},null," ")};`+"\n"+require("./packager/").main.join("\n"));
+				res.end(`var GPDATA = ${JSON.stringify({fileTemplate:fileTemplate,files:compiled},null," ")};`+require("./packager/").main.join("\n"));
 				return;
 			}	
 			if (req.url == "/gvbvdxxpack_files.json?n=1" || req.url == "/gvbvdxxpack_files.json/?n=1") {

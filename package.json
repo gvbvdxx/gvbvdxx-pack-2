@@ -1,6 +1,6 @@
 {
   "name": "gvbvdxx-pack-2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Node JS Based API For Making Apps, Simular To Webpack",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,6 @@
     "glob": "^8.0.3",
     "http": "^0.0.1-security",
     "jszip": "^3.10.1",
-    "minify-js": "^0.0.4",
     "node-minify": "^3.6.0"
   },
   "repository": {

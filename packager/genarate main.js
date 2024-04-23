@@ -1,29 +1,4 @@
-var UglifyJS = require("uglify-js");
 var fs = require("fs");
-function minify(content) {
-		var uglifyResult = UglifyJS.minify(content, {
-			toplevel: true,
-			warnings: true,
-			parse: {
-				
-			},
-			mangle: {
-				reserved: ["window.GPDATA","GPDATA","window"]
-			},
-			compress: {
-				passes: 10,
-				v8:true
-			},
-			output: {
-				beautify: false,
-				preamble: "/* This file has been minimized to save space and load times, I don't recommend editing this directly. */"
-			}
-		});
-		if (uglifyResult.error) {
-			throw new Error(JSON.stringify(uglifyResult));
-		}
-		return uglifyResult.code;
-	}
 var contents = fs.readFileSync("./packager/main.js", {
     encoding: "UTF-8"
 });
@@ -33,7 +8,7 @@ var comments = fs.readFileSync("./packager/comments.js", {
 });
 var extractedcomments = comments.split("\n");
 function makeText(text) {
-    return JSON.stringify(text);
+    return "\"" + text.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"").replaceAll("\n", "\\n").replaceAll("\t", " ").replaceAll("\r", "\\r") + "\"";
 }
 var contents = [
 "module.exports = ["];
@@ -60,9 +35,14 @@ for (var i in strings) {
     contents.push(strings[i]);
 }
 contents.push("];");
-
 fs.writeFileSync("packager/mainarray.js",
-[].join("\n")+"\n"+contents.join(""), {
+[
+"/**",
+" * AUTO MADE BY GENARATE MAIN SCRIPT",
+" * DO NOT EDIT! USE GENARATE MAIN SCRIPT TO UPDATE.",
+" * THIS CODE HAS BEEN COMPRESSED TO KEEP THINGS FAST.",
+" **/"
+].join("\n")+"\n"+contents.join(""), {
     encoding: "UTF-8"
 });
 console.log("main gen complete.")
