@@ -64,14 +64,17 @@ module.exports = {
 				var packageData = null;
 				if (uglify && (filename.split(".").pop() == "js" || filename.split(".").pop() == "JS")) {
 					var uglifyResult = UglifyJS.minify(packageFunction(files[i]), {
-						toplevel: true,
+						toplevel: false,
+						keep_fnames: true,
+						keep_fargs: true,
+						mangle: true,
 						warnings: true,
 						compress: {
 							passes: 10
 						},
 						output: {
 							beautify: false,
-							preamble: "/* This file has been minimized to save space and load times, I don't recommend editing this directly. */"
+							preamble: "/* This file has been minified, please do not edit if you see this message. */"
 						}
 					});
 					if (uglifyResult.error) {
