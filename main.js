@@ -67,10 +67,10 @@ module.exports = {
 						toplevel: false,
 						keep_fnames: true,
 						keep_fargs: true,
-						mangle: true,
+						mangle: false,
 						warnings: true,
 						compress: {
-							passes: 10
+							passes: 1
 						},
 						output: {
 							beautify: false,
